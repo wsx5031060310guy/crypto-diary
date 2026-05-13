@@ -33,21 +33,24 @@ ETF_ASSETS = {"SPY", "QQQ", "VOO", "VTI", "VT", "DIA", "IWM", "TLT", "BND"}
 APP_CSS = """
 <style>
     :root {
-        --diary-bg: #f6f3ee;
-        --diary-panel: #fffdf8;
-        --diary-ink: #1e2420;
-        --diary-muted: #667069;
-        --diary-line: rgba(54, 67, 60, 0.14);
-        --diary-green: #2f7d5d;
-        --diary-teal: #2b7a78;
-        --diary-amber: #b7791f;
-        --diary-red: #b94a48;
+        --diary-bg: #f2f6f3;
+        --diary-panel: #ffffff;
+        --diary-panel-soft: #f8fbf9;
+        --diary-ink: #101815;
+        --diary-muted: #34443d;
+        --diary-line: #aabbb1;
+        --diary-line-strong: #6f867a;
+        --diary-green: #007a5a;
+        --diary-green-dark: #00583f;
+        --diary-teal: #006b73;
+        --diary-amber: #8a5200;
+        --diary-warning-bg: #fff2b8;
+        --diary-warning-border: #b77900;
+        --diary-shadow: rgba(16, 24, 21, 0.10);
     }
 
     .stApp {
-        background:
-            linear-gradient(180deg, rgba(246, 243, 238, 0.95), rgba(248, 247, 244, 0.98)),
-            radial-gradient(circle at 8% 0%, rgba(47, 125, 93, 0.10), transparent 30%);
+        background: var(--diary-bg);
         color: var(--diary-ink);
     }
 
@@ -58,20 +61,51 @@ APP_CSS = """
     }
 
     [data-testid="stSidebar"] {
-        background: #efe9df;
-        border-right: 1px solid var(--diary-line);
+        background: #e7f0eb;
+        border-right: 2px solid var(--diary-line);
     }
 
-    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li {
+        color: var(--diary-ink);
+    }
+
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+    [data-testid="stSidebar"] label {
         color: var(--diary-muted);
+    }
+
+    [data-testid="stAlert"] {
+        background: var(--diary-warning-bg);
+        border: 2px solid var(--diary-warning-border);
+        border-radius: 8px;
+        color: #422b00;
+    }
+
+    [data-testid="stAlert"] p {
+        color: #422b00;
+        font-weight: 760;
+    }
+
+    [data-testid="stExpander"] {
+        background: var(--diary-panel);
+        border: 1px solid var(--diary-line);
+        border-radius: 8px;
+    }
+
+    [data-testid="stCodeBlock"] pre {
+        background: #f6f8fb;
+        border: 1px solid #a8b3c2;
+        color: #0b1824;
     }
 
     div[data-testid="stMetric"] {
         background: var(--diary-panel);
         border: 1px solid var(--diary-line);
+        border-top: 4px solid var(--diary-green);
         border-radius: 8px;
         padding: 1rem 1.05rem;
-        box-shadow: 0 12px 30px rgba(34, 42, 37, 0.06);
+        box-shadow: 0 10px 22px var(--diary-shadow);
         min-height: 118px;
     }
 
@@ -85,18 +119,17 @@ APP_CSS = """
     div[data-testid="stMetricValue"] {
         color: var(--diary-ink);
         font-size: 1.75rem;
-        font-weight: 760;
+        font-weight: 820;
     }
 
     .diary-hero {
         border: 1px solid var(--diary-line);
+        border-left: 8px solid var(--diary-green);
         border-radius: 8px;
-        background:
-            linear-gradient(135deg, rgba(255, 253, 248, 0.98), rgba(244, 238, 226, 0.94)),
-            linear-gradient(90deg, rgba(47, 125, 93, 0.08), rgba(183, 121, 31, 0.07));
+        background: var(--diary-panel);
         padding: 1.35rem 1.4rem;
         margin-bottom: 1rem;
-        box-shadow: 0 18px 44px rgba(34, 42, 37, 0.07);
+        box-shadow: 0 18px 38px var(--diary-shadow);
     }
 
     .diary-hero-top {
@@ -109,16 +142,16 @@ APP_CSS = """
     }
 
     .diary-eyebrow {
-        color: var(--diary-green);
+        color: var(--diary-green-dark);
         font-size: 0.78rem;
-        font-weight: 800;
+        font-weight: 860;
         letter-spacing: 0;
         text-transform: uppercase;
     }
 
     .diary-title {
         color: var(--diary-ink);
-        font-size: clamp(2rem, 4vw, 3.25rem);
+        font-size: 3rem;
         line-height: 1.05;
         font-weight: 840;
         letter-spacing: 0;
@@ -127,7 +160,8 @@ APP_CSS = """
 
     .diary-subtitle {
         color: var(--diary-muted);
-        font-size: 1rem;
+        font-size: 1.05rem;
+        font-weight: 620;
         margin: 0;
         max-width: 760px;
     }
@@ -143,20 +177,20 @@ APP_CSS = """
         display: inline-flex;
         align-items: center;
         min-height: 2rem;
-        border: 1px solid rgba(47, 125, 93, 0.25);
-        border-radius: 999px;
-        background: rgba(47, 125, 93, 0.10);
-        color: #235f49;
+        border: 1px solid var(--diary-green-dark);
+        border-radius: 8px;
+        background: var(--diary-green);
+        color: #ffffff;
         font-size: 0.82rem;
-        font-weight: 760;
+        font-weight: 820;
         padding: 0.35rem 0.7rem;
         white-space: nowrap;
     }
 
     .diary-badge.secondary {
-        border-color: rgba(183, 121, 31, 0.22);
-        background: rgba(183, 121, 31, 0.10);
-        color: #7b531b;
+        border-color: #6b3e00;
+        background: var(--diary-warning-bg);
+        color: #4a2d00;
     }
 
     .diary-status {
@@ -166,7 +200,7 @@ APP_CSS = """
     }
 
     .diary-status-item {
-        background: rgba(255, 255, 255, 0.58);
+        background: var(--diary-panel-soft);
         border: 1px solid var(--diary-line);
         border-radius: 8px;
         padding: 0.75rem 0.85rem;
@@ -176,7 +210,7 @@ APP_CSS = """
         color: var(--diary-muted);
         display: block;
         font-size: 0.78rem;
-        font-weight: 700;
+        font-weight: 780;
         margin-bottom: 0.25rem;
     }
 
@@ -184,20 +218,21 @@ APP_CSS = """
         color: var(--diary-ink);
         display: block;
         font-size: 0.95rem;
-        font-weight: 760;
+        font-weight: 820;
         overflow-wrap: anywhere;
     }
 
     .diary-section-title {
         color: var(--diary-ink);
         font-size: 1.22rem;
-        font-weight: 820;
+        font-weight: 860;
         margin: 1.2rem 0 0.55rem;
     }
 
     .diary-note {
-        border-left: 4px solid var(--diary-green);
-        background: rgba(47, 125, 93, 0.08);
+        border: 1px solid var(--diary-line-strong);
+        border-left: 6px solid var(--diary-green);
+        background: #eaf7f1;
         border-radius: 0 8px 8px 0;
         color: var(--diary-ink);
         padding: 0.85rem 1rem;
@@ -205,7 +240,7 @@ APP_CSS = """
     }
 
     .diary-note strong {
-        color: #235f49;
+        color: var(--diary-green-dark);
     }
 
     .journal-panel {
@@ -213,7 +248,7 @@ APP_CSS = """
         border: 1px solid var(--diary-line);
         border-radius: 8px;
         padding: 1.1rem 1.15rem;
-        box-shadow: 0 12px 30px rgba(34, 42, 37, 0.05);
+        box-shadow: 0 10px 22px var(--diary-shadow);
     }
 
     .journal-title {
@@ -228,27 +263,34 @@ APP_CSS = """
     .journal-meta {
         color: var(--diary-muted);
         font-size: 0.9rem;
+        font-weight: 620;
         margin-bottom: 0.75rem;
     }
 
     .journal-summary {
-        background: rgba(43, 122, 120, 0.08);
-        border: 1px solid rgba(43, 122, 120, 0.16);
+        background: #e6f4f4;
+        border: 1px solid #80aeb2;
         border-radius: 8px;
-        color: #235b59;
+        color: #073f45;
         padding: 0.8rem 0.9rem;
         margin-bottom: 1rem;
+        font-weight: 620;
     }
 
     [data-testid="stTabs"] button {
-        font-weight: 760;
+        color: var(--diary-muted);
+        font-weight: 820;
+    }
+
+    [data-testid="stTabs"] button[aria-selected="true"] {
+        color: var(--diary-green-dark);
     }
 
     [data-testid="stDataFrame"] {
         border: 1px solid var(--diary-line);
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 10px 24px rgba(34, 42, 37, 0.04);
+        box-shadow: 0 10px 22px var(--diary-shadow);
     }
 
     @media (max-width: 760px) {
@@ -259,6 +301,10 @@ APP_CSS = """
 
         .diary-hero {
             padding: 1.1rem;
+        }
+
+        .diary-title {
+            font-size: 2.2rem;
         }
 
         .diary-status {
