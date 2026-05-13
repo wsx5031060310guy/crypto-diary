@@ -387,6 +387,76 @@ APP_CSS = """
         font-weight: 620;
     }
 
+    .decision-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+        margin-top: 0.6rem;
+    }
+
+    .decision-card {
+        background: var(--diary-panel);
+        border: 1px solid var(--diary-line);
+        border-left: 6px solid var(--diary-teal);
+        border-radius: 8px;
+        box-shadow: 0 10px 22px var(--diary-shadow);
+        padding: 1rem;
+    }
+
+    .decision-topline {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-bottom: 0.7rem;
+    }
+
+    .decision-pill {
+        border-radius: 8px;
+        display: inline-flex;
+        font-size: 0.78rem;
+        font-weight: 840;
+        line-height: 1;
+        padding: 0.38rem 0.55rem;
+    }
+
+    .decision-pill.date {
+        background: #e6f4f4;
+        border: 1px solid #76b6bc;
+        color: #073f45;
+    }
+
+    .decision-pill.category {
+        background: #eaf7f1;
+        border: 1px solid #74bda3;
+        color: var(--diary-green-dark);
+    }
+
+    .decision-card-title {
+        color: var(--diary-ink);
+        font-size: 1.08rem;
+        font-weight: 860;
+        line-height: 1.32;
+        margin: 0 0 0.55rem;
+    }
+
+    .decision-summary {
+        color: var(--diary-muted);
+        font-size: 0.94rem;
+        font-weight: 620;
+        line-height: 1.62;
+        margin: 0 0 0.8rem;
+    }
+
+    .decision-source {
+        border-top: 1px solid var(--diary-line);
+        color: #40534a;
+        font-size: 0.82rem;
+        font-weight: 680;
+        padding-top: 0.65rem;
+        overflow-wrap: anywhere;
+    }
+
     [data-testid="stTabs"] button {
         color: var(--diary-muted);
         font-weight: 820;
@@ -420,6 +490,10 @@ APP_CSS = """
         }
 
         .diary-status {
+            grid-template-columns: 1fr;
+        }
+
+        .decision-grid {
             grid-template-columns: 1fr;
         }
 
@@ -700,6 +774,39 @@ def render_journal_panel(row: pd.Series) -> None:
         unsafe_allow_html=True,
     )
 
+
+def render_recent_decision_cards(journals: pd.DataFrame, limit: int = 6) -> None:
+    ordered = sort_journals_desc(journals).head(limit)
+    cards = []
+    for _, row in ordered.iterrows():
+        title = row.get("title", "每日投資決策")
+        summary = str(row.get("summary", "") or "").strip()
+        if not summary:
+            summary = "這筆排程決策尚未提供摘要，可以到「每日排程日記」分頁閱讀完整內容。"
+        cards.append(
+            f"""
+<article class="decision-card">
+  <div class="decision-topline">
+    <span class="decision-pill date">{safe_text(row.get("date", "—"))}</span>
+    <span class="decision-pill category">{safe_text(row.get("category", "—"))}</span>
+  </div>
+  <h3 class="decision-card-title">{safe_text(title, "每日投資決策")}</h3>
+  <p class="decision-summary">{safe_text(summary)}</p>
+  <div class="decision-source">來源：{safe_text(row.get("source", "—"))}</div>
+</article>
+            """
+        )
+
+    st.markdown(
+        f"""
+<div class="decision-grid">
+  {''.join(cards)}
+</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 st.markdown(APP_CSS, unsafe_allow_html=True)
 
 spreadsheet, err = get_spreadsheet()
@@ -886,21 +993,7 @@ with tab_overview:
     if filtered_journals.empty:
         st.info("尚未在 Google Sheet 的 journal_entries 工作表看到排程日記。")
     else:
-        preview_cols = ["date", "category", "title", "summary", "source"]
-        preview = sort_journals_desc(filtered_journals)[preview_cols].head(10)
-        st.dataframe(
-            preview.rename(
-                columns={
-                    "date": "日期",
-                    "category": "分類",
-                    "title": "標題",
-                    "summary": "摘要",
-                    "source": "來源",
-                }
-            ),
-            use_container_width=True,
-            hide_index=True,
-        )
+        render_recent_decision_cards(filtered_journals)
 
 with tab_journals:
     st.markdown('<div class="diary-section-title">每日排程歷史紀錄</div>', unsafe_allow_html=True)
