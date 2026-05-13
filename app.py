@@ -46,6 +46,11 @@ APP_CSS = """
         --diary-amber: #8a5200;
         --diary-warning-bg: #fff2b8;
         --diary-warning-border: #b77900;
+        --sidebar-bg: #063d32;
+        --sidebar-bg-soft: #0d5143;
+        --sidebar-border: #76c7ad;
+        --sidebar-text: #f3fff9;
+        --sidebar-muted: #c9eadf;
         --diary-shadow: rgba(16, 24, 21, 0.10);
     }
 
@@ -61,8 +66,8 @@ APP_CSS = """
     }
 
     [data-testid="stSidebar"] {
-        background: #e7f0eb;
-        border-right: 2px solid var(--diary-line);
+        background: var(--sidebar-bg);
+        border-right: 2px solid #03291f;
     }
 
     [data-testid="stMarkdownContainer"] p,
@@ -72,7 +77,112 @@ APP_CSS = """
 
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
     [data-testid="stSidebar"] label {
+        color: var(--sidebar-text);
+        font-weight: 720;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+        color: var(--sidebar-muted);
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="select"] > div {
+        background: #ffffff;
+        border: 2px solid var(--sidebar-border);
+        color: var(--diary-ink);
+        border-radius: 8px;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="tag"] {
+        background: var(--diary-green);
+        border: 1px solid var(--diary-green-dark);
+        color: #ffffff;
+        font-weight: 760;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="tag"] span {
+        color: #ffffff;
+    }
+
+    .sidebar-brand {
+        background: #ffffff;
+        border: 1px solid var(--sidebar-border);
+        border-left: 6px solid #3ee0a4;
+        border-radius: 8px;
+        color: var(--diary-ink);
+        padding: 1rem;
+        margin: 0.35rem 0 1rem;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+    }
+
+    .sidebar-kicker {
+        color: var(--diary-green-dark);
+        font-size: 0.74rem;
+        font-weight: 860;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .sidebar-title {
+        color: var(--diary-ink);
+        font-size: 1.35rem;
+        font-weight: 860;
+        line-height: 1.15;
+        margin: 0;
+    }
+
+    .sidebar-subtitle {
         color: var(--diary-muted);
+        font-size: 0.86rem;
+        font-weight: 650;
+        margin-top: 0.45rem;
+    }
+
+    .sidebar-section-title {
+        color: var(--sidebar-text);
+        font-size: 0.82rem;
+        font-weight: 860;
+        letter-spacing: 0;
+        margin: 1.2rem 0 0.45rem;
+        text-transform: uppercase;
+    }
+
+    .sidebar-card {
+        background: var(--sidebar-bg-soft);
+        border: 1px solid var(--sidebar-border);
+        border-radius: 8px;
+        color: var(--sidebar-text);
+        padding: 0.85rem;
+        margin: 0.7rem 0;
+    }
+
+    .sidebar-card-label {
+        color: var(--sidebar-muted);
+        display: block;
+        font-size: 0.76rem;
+        font-weight: 800;
+        margin-bottom: 0.2rem;
+    }
+
+    .sidebar-card-value {
+        color: var(--sidebar-text);
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 780;
+        overflow-wrap: anywhere;
+    }
+
+    .sidebar-status {
+        align-items: center;
+        background: #e8fff6;
+        border: 1px solid #84d8bd;
+        border-radius: 8px;
+        color: #05382c;
+        display: inline-flex;
+        font-size: 0.78rem;
+        font-weight: 840;
+        margin-top: 0.65rem;
+        padding: 0.38rem 0.55rem;
     }
 
     [data-testid="stAlert"] {
@@ -280,10 +390,12 @@ APP_CSS = """
     [data-testid="stTabs"] button {
         color: var(--diary-muted);
         font-weight: 820;
+        border-bottom: 3px solid transparent;
     }
 
     [data-testid="stTabs"] button[aria-selected="true"] {
         color: var(--diary-green-dark);
+        border-bottom-color: var(--diary-green);
     }
 
     [data-testid="stDataFrame"] {
@@ -309,6 +421,10 @@ APP_CSS = """
 
         .diary-status {
             grid-template-columns: 1fr;
+        }
+
+        .sidebar-brand {
+            margin-top: 0.5rem;
         }
     }
 </style>
@@ -461,6 +577,59 @@ def sort_journals_desc(df: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values("date_dt", ascending=False, na_position="last")
 
 
+def render_sidebar(
+    categories: list[str] | None = None,
+    trade_worksheet: str = "trades",
+    journal_worksheet: str = "journal_entries",
+    status_label: str = "Google Sheets 唯讀",
+    status_detail: str = "資料已連線",
+) -> list[str]:
+    with st.sidebar:
+        st.markdown(
+            f"""
+<div class="sidebar-brand">
+  <div class="sidebar-kicker">Investment Journal</div>
+  <div class="sidebar-title">投資日記</div>
+  <div class="sidebar-subtitle">交易、排程決策與歷史紀錄集中檢視。</div>
+  <div class="sidebar-status">{safe_text(status_label)}</div>
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        selected_categories = categories or []
+        if categories:
+            st.markdown('<div class="sidebar-section-title">篩選分類</div>', unsafe_allow_html=True)
+            selected_categories = st.multiselect(
+                "顯示分類",
+                categories,
+                default=categories,
+                help="Crypto / ETF / 其他投資日記會集中顯示，也可單獨篩選。",
+            )
+        else:
+            st.markdown('<div class="sidebar-section-title">目前狀態</div>', unsafe_allow_html=True)
+
+        st.markdown(
+            f"""
+<div class="sidebar-card">
+  <span class="sidebar-card-label">連線狀態</span>
+  <span class="sidebar-card-value">{safe_text(status_detail)}</span>
+</div>
+<div class="sidebar-card">
+  <span class="sidebar-card-label">交易 worksheet</span>
+  <span class="sidebar-card-value">{safe_text(trade_worksheet)}</span>
+</div>
+<div class="sidebar-card">
+  <span class="sidebar-card-label">日記 worksheet</span>
+  <span class="sidebar-card-value">{safe_text(journal_worksheet)}</span>
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    return selected_categories
+
+
 def render_hero(
     trade_worksheet: str,
     journal_worksheet: str,
@@ -536,6 +705,10 @@ st.markdown(APP_CSS, unsafe_allow_html=True)
 spreadsheet, err = get_spreadsheet()
 
 if err:
+    render_sidebar(
+        status_label="等待設定",
+        status_detail="請先補上 Streamlit Secrets，儀表板才會讀取 Google Sheets。",
+    )
     st.markdown(
         """
 <section class="diary-hero">
@@ -591,18 +764,13 @@ trades = load_trades(spreadsheet, trade_worksheet)
 journals = load_journals(spreadsheet, journal_worksheet)
 
 all_categories = ["Crypto", "ETF", "其他"]
-with st.sidebar:
-    st.markdown("### 篩選")
-    selected_categories = st.multiselect(
-        "顯示分類",
-        all_categories,
-        default=all_categories,
-        help="Crypto / ETF / 其他投資日記會集中顯示，也可單獨篩選。",
-    )
-    st.markdown("### 資料來源")
-    st.caption(f"交易 worksheet：`{trade_worksheet}`")
-    st.caption(f"日記 worksheet：`{journal_worksheet}`")
-    st.caption("連線狀態：Google Sheets 唯讀")
+selected_categories = render_sidebar(
+    categories=all_categories,
+    trade_worksheet=trade_worksheet,
+    journal_worksheet=journal_worksheet,
+    status_label="Google Sheets 已連線",
+    status_detail="唯讀模式，網頁不會寫入資料。",
+)
 
 filtered_trades = filter_categories(trades, selected_categories)
 filtered_journals = filter_categories(journals, selected_categories)
