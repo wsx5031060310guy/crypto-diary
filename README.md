@@ -1,25 +1,48 @@
 # Crypto Diary / 投資日記
 
-Streamlit + Google Sheets 的唯讀投資日記儀表板，用來集中展示：
+Streamlit + Google Sheets 的唯讀投資日記儀表板。狀態：已部署於 Streamlit Cloud；網頁端是 read-only / 唯讀模式。
 
-- 加密貨幣交易紀錄（Crypto）
-- ETF 投資紀錄
-- 其他投資紀錄
-- 每日自動投資排程產生的投資計劃與歷史日記
-
-目前網頁端是 **read-only / 唯讀模式**：所有新增與修改都透過 Google Sheet 或每日排程寫入，網頁只負責讀取與呈現。
+Crypto Diary 集中展示加密貨幣交易紀錄、ETF 投資紀錄、其他投資紀錄，以及每日自動投資排程產生的投資計劃與歷史日記。所有新增與修改都透過 Google Sheet、外部排程或匯入腳本完成，Streamlit app 只負責讀取與呈現。
 
 ## Live App
 
 - Streamlit Cloud: https://crypto-diary-bvprx9psuxdvbuyrmohhgr.streamlit.app/
 - GitHub repo: https://github.com/wsx5031060310guy/crypto-diary
 
+## 📚 專案文件
+
+```mermaid
+graph TD
+    README["README.md"] --> Architecture["docs/ARCHITECTURE.md"]
+    README --> Flows["docs/FLOWS.md"]
+    README --> Pages["docs/PAGES.md"]
+    README --> Operations["docs/OPERATIONS.md"]
+```
+
+- [系統架構](docs/ARCHITECTURE.md)：專案總覽、技術棧、元件關係、目錄與資料模型。
+- [操作與業務流程](docs/FLOWS.md)：Streamlit 連線、總覽彙總、日記閱讀、交易檢視與匯入流程。
+- [頁面 / 路由 / 模組清單](docs/PAGES.md)：單頁 Streamlit 結構、tabs、外部 API 呼叫與主要函式。
+- [安裝、執行、部署、維運](docs/OPERATIONS.md)：本機啟動、Secrets、環境變數、Streamlit Cloud 與常見維運操作。
+
+## 快速開始
+
+```bash
+git clone https://github.com/wsx5031060310guy/crypto-diary.git
+cd crypto-diary
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+本機需建立 `.streamlit/secrets.toml`，或在 Streamlit Cloud App Settings → Secrets 設定 Google Service Account 與 Sheet 資訊。
+
 ## 功能
 
 - **總覽 Dashboard**
   - 交易筆數
   - 每日排程日記篇數
-  - 累計買入 / 賣出金額
+  - 累計買入 / 賣出金額與淨投入
   - 各分類、各資產持倉摘要
 
 - **每日排程日記**
@@ -29,7 +52,7 @@ Streamlit + Google Sheets 的唯讀投資日記儀表板，用來集中展示：
 
 - **交易紀錄**
   - 讀取 Google Sheet `trades` worksheet
-  - 顯示 asset、side、amount、price、total、note
+  - 顯示 `asset`, `side`, `amount`, `price`, `total`, `note`
 
 - **唯讀資料流**
   - Streamlit app 使用 `spreadsheets.readonly` scope
@@ -80,17 +103,6 @@ Streamlit + Google Sheets 的唯讀投資日記儀表板，用來集中展示：
 | `cron_output_path` | 本機 cron output path，如有 |
 | `tags` | 標籤，例如 `daily-schedule,investment-plan,crypto,etf` |
 
-## 本機開發
-
-```bash
-git clone https://github.com/wsx5031060310guy/crypto-diary.git
-cd crypto-diary
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-streamlit run app.py
-```
-
 ## Streamlit Secrets
 
 在 Streamlit Cloud 或本機 `.streamlit/secrets.toml` 設定：
@@ -115,7 +127,7 @@ worksheet = "trades"
 journal_worksheet = "journal_entries"
 ```
 
-> 不要把 service account JSON、`.streamlit/secrets.toml`、Google Sheet ID 以外的敏感資訊 commit 到 GitHub。
+> 不要把 service account JSON、`.streamlit/secrets.toml`、private key 或 token commit 到 GitHub。
 
 ## 匯入每日排程歷史紀錄
 
@@ -140,7 +152,7 @@ python scripts/import_investment_journals.py
   /Users/mike-hermes-ai/projects/crypto-diary/scripts/import_investment_journals.py
 ```
 
-可用環境變數覆蓋預設路徑：
+可用環境變數覆蓋預設路徑與設定：
 
 - `CRYPTO_BOT_SHEET_ID`
 - `CRYPTO_BOT_GCP_CRED`
